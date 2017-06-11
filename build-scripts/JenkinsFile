@@ -467,7 +467,7 @@ node ("${nodeLabel}") {
                         //Following steps are for updating ballerina-parent and ballerina to latest snapshot
                         updateParent(composerRepository, settingsXMLID, parentUpdateCommitMessage, true);
                         updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
-                                "${ballerinaGroudId}:*", true);
+                                "${ballerinaGroudId}:*,${ballerinaConnectorsGroupId}:connectors", true);
                         pushCurrentBranch(composerRepository, gitCredentialsID, user);
                         build(settingsXMLID, composerRepository, YES);
                     }
