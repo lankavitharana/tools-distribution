@@ -320,7 +320,7 @@ node ("${nodeLabel}") {
                 if (isRelease && !composerSkipRelease) {
                     updateParent(composerRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                     updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
-                            "${ballerinaGroudId}:*", !isRelease);
+                            "${ballerinaGroudId}:*,${ballerinaConnectorsGroupId}:connectors", !isRelease);
                     tagMap.add([composerRepository, composerReleaseTag, composerVersion]);
                     release(settingsXMLID, composerRepository, composerVersion, composerReleaseTag, composerDevVersion, composerSkipTests);
                 }
