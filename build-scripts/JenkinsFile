@@ -257,25 +257,6 @@ node ("${nodeLabel}") {
             }
         }
 
-        stage('Building connectors') {
-            cloneRepository(connectorsRepository, user, gitCredentialsID, gitEmail);
-            if (isRelease && !connectorsSkipRelease) {
-                updateParent(connectorsRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
-                updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*", !isRelease);
-                tagMap.add([connectorsRepository, connectorsReleaseTag, connectorsVersion]);
-                release(settingsXMLID, connectorsRepository, connectorsVersion, connectorsReleaseTag, connectorsDevVersion, connectorsSkipTests);
-            }
-
-            if (isBuild) {
-                build(settingsXMLID, connectorsRepository, connectorsSkipTests);
-            }
-
-            if (isCleanRelease) {
-                cleanRelease(connectorsRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
-            }
-        }
-
         stage('Building docerina') {
             cloneRepository(docerinaRepository, user, gitCredentialsID, gitEmail);
             if (isRelease && !docerinaSkipRelease) {
@@ -311,6 +292,25 @@ node ("${nodeLabel}") {
 
             if (isCleanRelease) {
                 cleanRelease(pluginMavenRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
+            }
+        }
+
+        stage('Building connectors') {
+            cloneRepository(connectorsRepository, user, gitCredentialsID, gitEmail);
+            if (isRelease && !connectorsSkipRelease) {
+                updateParent(connectorsRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
+                updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
+                        "${ballerinaGroudId}:*", !isRelease);
+                tagMap.add([connectorsRepository, connectorsReleaseTag, connectorsVersion]);
+                release(settingsXMLID, connectorsRepository, connectorsVersion, connectorsReleaseTag, connectorsDevVersion, connectorsSkipTests);
+            }
+
+            if (isBuild) {
+                build(settingsXMLID, connectorsRepository, connectorsSkipTests);
+            }
+
+            if (isCleanRelease) {
+                cleanRelease(connectorsRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
             }
         }
 
@@ -428,17 +428,6 @@ node ("${nodeLabel}") {
                 }
             }
 
-            stage('Building ballerina') {
-                if (!connectorsSkipRelease) {
-                    //Following steps are for updating ballerina-parent and ballerina to latest snapshot
-                    updateParent(connectorsRepository, settingsXMLID, parentUpdateCommitMessage, true);
-                    updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
-                            "${ballerinaGroudId}:*", true);
-                    pushCurrentBranch(connectorsRepository, gitCredentialsID, user);
-                    build(settingsXMLID, connectorsRepository, YES);
-                }
-            }
-
             stage('Building docerina') {
                 if (!docerinaSkipRelease) {
                     //Following steps are for updating ballerina-parent and ballerina to latest snapshot
@@ -458,6 +447,17 @@ node ("${nodeLabel}") {
                             "${ballerinaGroudId}:docerina", true);
                     pushCurrentBranch(pluginMavenRepository, gitCredentialsID, user);
                     build(settingsXMLID, pluginMavenRepository, YES);
+                }
+            }
+
+            stage('Building connectors') {
+                if (!connectorsSkipRelease) {
+                    //Following steps are for updating ballerina-parent and ballerina to latest snapshot
+                    updateParent(connectorsRepository, settingsXMLID, parentUpdateCommitMessage, true);
+                    updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
+                            "${ballerinaGroudId}:*", true);
+                    pushCurrentBranch(connectorsRepository, gitCredentialsID, user);
+                    build(settingsXMLID, connectorsRepository, YES);
                 }
             }
 
