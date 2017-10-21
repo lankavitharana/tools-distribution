@@ -740,7 +740,7 @@ def cleanupRepositoryAfterFailure(String repositoryName, String user, String rel
             );
             println("Deleting local release branch release-${releaseVersion}");
             sh(
-                    script: "git branch --delete release-" + releaseVersion,
+                    script: "git branch -D release-" + releaseVersion,
                     returnStatus: true
             );
         }
