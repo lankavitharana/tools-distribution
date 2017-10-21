@@ -727,9 +727,20 @@ def cleanupRepositoryAfterFailure(String repositoryName, String user, String rel
                     script: "git push --delete origin ${releaseTag}",
                     returnStatus: true
             );
+            println("Deleting local tag ${releaseTag}");
+            sh(
+                    script: "git tag --delete ${releaseTag}",
+                    returnStatus: true
+            );
+
             println("Deleting release branch of ${repositoryName}");
             sh(
                     script: "git push --delete origin release-" + releaseVersion,
+                    returnStatus: true
+            );
+            println("Deleting local release branch release-${releaseVersion}");
+            sh(
+                    script: "git branch --delete release-" + releaseVersion,
                     returnStatus: true
             );
         }
