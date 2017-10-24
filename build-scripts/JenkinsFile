@@ -554,9 +554,9 @@ def cloneRepository(String repositoryName, String user, String credentials, Stri
 
         checkout([
                 $class                           : 'GitSCM',
-                branches                         : [[name: '*/master']],
+                branches                         : [[name: '*/release-0.94.0-M1']],
                 doGenerateSubmoduleConfigurations: false,
-                extensions                       : [[$class: 'LocalBranch', localBranch: 'master'],
+                extensions                       : [[$class: 'LocalBranch', localBranch: 'release-0.94.0-M1'],
                                                     [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName]],
                 submoduleCfg                     : [],
                 userRemoteConfigs                :
@@ -582,7 +582,7 @@ def updateProperties(String repositoryName, String settingsXml, String commitMes
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryName) {
-            withEnv(["JAVA_HOME=${ tool env.JDK }", "PATH+MAVEN=${tool env.MAVEN_TOOL}/bin:${env.JAVA_HOME}/bin"]) {
+            withEnv(["JAVA_HOME=${ tool env.JDK }", "PATH+MAVEN=${tool env.MAVEN_TOOL}/bin:${env.JAVA_HOME}/bin:${env.NODE}/bin"]) {
                 if (!allowSnapshots) {
                     sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList}"
                 } else {
@@ -613,7 +613,7 @@ def updateParent(String repositoryName, String settingsXml, String commitMessage
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryName) {
-            withEnv(["JAVA_HOME=${ tool env.JDK }", "PATH+MAVEN=${tool env.MAVEN_TOOL}/bin:${env.JAVA_HOME}/bin"]) {
+            withEnv(["JAVA_HOME=${ tool env.JDK }", "PATH+MAVEN=${tool env.MAVEN_TOOL}/bin:${env.JAVA_HOME}/bin:${env.NODE}/bin"]) {
                 if (!allowSnapshots) {
                     sh "mvn -s $MAVEN_SETTINGS versions:update-parent";
                 } else {
@@ -668,7 +668,7 @@ def release(String settingsXml, String repositoryDir, String releaseVersion, Str
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryDir) {
             sh("git checkout -b release-" + releaseVersion);
-            withEnv(["JAVA_HOME=${ tool env.JDK }", "M2_HOME=${tool env.MAVEN_TOOL}", "PATH+MVN=${ tool env.JDK }/bin:${tool env.MAVEN_TOOL}/bin"]) {
+            withEnv(["JAVA_HOME=${ tool env.JDK }", "M2_HOME=${tool env.MAVEN_TOOL}", "PATH+MVN=${ tool env.JDK }/bin:${tool env.MAVEN_TOOL}/bin:${env.NODE}/bin"]) {
                 if ("Yes".equals(skipTests)) {
                     sh 'mvn --version'
                     sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true" -DreleaseVersion=' + releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
@@ -692,7 +692,7 @@ def build(String settingsXml, String repositoryDir, String skipTests) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryDir) {
-            withEnv(["JAVA_HOME=${ tool env.JDK }", "M2_HOME=${tool env.MAVEN_TOOL}", "PATH+MVN=${ tool env.JDK }/bin:${tool env.MAVEN_TOOL}/bin"]) {
+            withEnv(["JAVA_HOME=${ tool env.JDK }", "M2_HOME=${tool env.MAVEN_TOOL}", "PATH+MVN=${ tool env.JDK }/bin:${tool env.MAVEN_TOOL}/bin:${env.NODE}/bin"]) {
                 if ("Yes".equals(skipTests)) {
                     sh 'mvn --version'
                     sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true'
