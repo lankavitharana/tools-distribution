@@ -556,7 +556,7 @@ def cloneRepository(String repositoryName, String user, String credentials, Stri
                 $class                           : 'GitSCM',
                 branches                         : [[name: '*/release-0.94.0-M1']],
                 doGenerateSubmoduleConfigurations: false,
-                extensions                       : [[$class: 'LocalBranch', localBranch: 'master'],
+                extensions                       : [[$class: 'LocalBranch', localBranch: 'release-0.94.0-M1'],
                                                     [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName]],
                 submoduleCfg                     : [],
                 userRemoteConfigs                :
