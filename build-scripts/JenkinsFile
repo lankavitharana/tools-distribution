@@ -27,8 +27,6 @@ String testerinaVersion, testerinaReleaseTag, testerinaDevVersion, testerinaSkip
 boolean testerinaSkipRelease = false;
 String containerSupportVersion, containerSupportReleaseTag, containerSupportDevVersion, containerSupportSkipTests;
 boolean containerSupportSkipRelease = false;
-String connectorsVersion, connectorsReleaseTag, connectorsDevVersion, connectorsSkipTests;
-boolean connectorsSkipRelease = false;
 String toolSwaggerVersion, toolSwaggerReleaseTag, toolSwaggerDevVersion, toolSwaggerSkipTests;
 boolean toolSwaggerSkipRelease = false;
 String pluginMavenVersion, pluginMavenReleaseTag, pluginMavenDevVersion, pluginMavenSkipTests;
@@ -75,9 +73,6 @@ if (isRelease) {
 
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-container-support-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-container-support-release'],
-
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-connectors-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-connectors-release'],
 
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-tool-swagger-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-tool-swagger-release'],
@@ -128,12 +123,6 @@ if (isRelease) {
     containerSupportSkipTests = releaseParamInput['skip-container-support-tests'];
     containerSupportSkipRelease = YES.equals(releaseParamInput['skip-container-support-release']);
 
-    connectorsVersion = ballerinaParentVersion;
-    connectorsReleaseTag = ballerinaParentReleaseTag;
-    connectorsDevVersion = ballerinaParentDevVersion;
-    connectorsSkipTests = releaseParamInput['skip-connectors-tests'];
-    connectorsSkipRelease = YES.equals(releaseParamInput['skip-connectors-release']);
-
     toolSwaggerVersion = ballerinaParentVersion;
     toolSwaggerReleaseTag = ballerinaParentReleaseTag;
     toolSwaggerDevVersion = ballerinaParentDevVersion;
@@ -166,7 +155,6 @@ if (isBuild) {
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip docerina Tests', name: 'skip-docerina-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip testerina Tests', name: 'skip-testerina-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip container-support Tests', name: 'skip-container-support-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip connectors Tests', name: 'skip-connectors-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip tool-swagger-ballerina Tests', name: 'skip-tool-swagger-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip tools-distribution Tests', name: 'skip-tools-distrbution-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip plugin-maven Tests', name: 'skip-plugin-maven-tests']
@@ -179,7 +167,6 @@ if (isBuild) {
     docerinaSkipTests = buildParamInput['skip-docerina-tests'];
     testerinaSkipTests = buildParamInput['skip-testerina-tests'];
     containerSupportSkipTests = buildParamInput['skip-container-support-tests'];
-    connectorsSkipTests = buildParamInput['skip-connectors-tests'];
     toolSwaggerSkipTests = buildParamInput['skip-tool-swagger-tests'];
     toolsDistSkipTests = buildParamInput['skip-tools-distrbution-tests'];
     pluginMavenSkipTests = buildParamInput['skip-plugin-maven-tests'];
@@ -212,14 +199,12 @@ node ("${nodeLabel}") {
     String composerRepository = "composer";
     String docerinaRepository = "docerina";
     String testerinaRepository = "testerina";
-    String connectorsRepository = "connectors";
     String containerSupportRepository = "container-support";
     String toolsDistributionRepository = "tools-distribution";
     String toolSwaggerBallerinaRepository = "tool-swagger-ballerina";
     String pluginMavenRepository = "plugin-maven";
     String ballerinaParentRepository = "ballerina-parent";
     String ballerinaGroudId = "org.ballerinalang";
-    String ballerinaConnectorsGroupId = "org.wso2.ballerina.connectors"
     String propertyUpdateCommitMessage = "Update versions of org.ballerinalang.* dependencies";
     String parentUpdateCommitMessage = "Update ballerina-parent version";
 
@@ -295,32 +280,13 @@ node ("${nodeLabel}") {
             }
         }
 
-        stage('Building connectors') {
-            cloneRepository(connectorsRepository, user, gitCredentialsID, gitEmail);
-            if (isRelease && !connectorsSkipRelease) {
-                updateParent(connectorsRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
-                updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*", !isRelease);
-                tagMap.add([connectorsRepository, connectorsReleaseTag, connectorsVersion]);
-                release(settingsXMLID, connectorsRepository, connectorsVersion, connectorsReleaseTag, connectorsDevVersion, connectorsSkipTests);
-            }
-
-            if (isBuild) {
-                build(settingsXMLID, connectorsRepository, connectorsSkipTests);
-            }
-
-            if (isCleanRelease) {
-                cleanRelease(connectorsRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
-            }
-        }
-
-        stage('Building composer, testerina, connectors, container-support, tool-swagger-ballerina') {
+        stage('Building composer, testerina, container-support, tool-swagger-ballerina') {
             parallel composerBuild: {
                 cloneRepository(composerRepository, user, gitCredentialsID, gitEmail);
                 if (isRelease && !composerSkipRelease) {
                     updateParent(composerRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                     updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
-                            "${ballerinaGroudId}:*,${ballerinaConnectorsGroupId}:connectors", !isRelease);
+                            "${ballerinaGroudId}:*", !isRelease);
                     tagMap.add([composerRepository, composerReleaseTag, composerVersion]);
                     release(settingsXMLID, composerRepository, composerVersion, composerReleaseTag, composerDevVersion, composerSkipTests);
                 }
@@ -391,7 +357,7 @@ node ("${nodeLabel}") {
             if (isRelease && !toolsDistSkipRelease) {
                 updateParent(toolsDistributionRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                 updateProperties(toolsDistributionRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*,${ballerinaConnectorsGroupId}:connectors", !isRelease);
+                        "${ballerinaGroudId}:*", !isRelease);
                 tagMap.add([toolsDistributionRepository, toolsDistReleaseTag, toolsDistVersion]);
                 release(settingsXMLID, toolsDistributionRepository, toolsDistVersion, toolsDistReleaseTag, toolsDistDevVersion, toolsDistSkipTests);
             }
@@ -450,24 +416,13 @@ node ("${nodeLabel}") {
                 }
             }
 
-            stage('Building connectors') {
-                if (!connectorsSkipRelease) {
-                    //Following steps are for updating ballerina-parent and ballerina to latest snapshot
-                    updateParent(connectorsRepository, settingsXMLID, parentUpdateCommitMessage, true);
-                    updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
-                            "${ballerinaGroudId}:*", true);
-                    pushCurrentBranch(connectorsRepository, gitCredentialsID, user);
-                    build(settingsXMLID, connectorsRepository, YES);
-                }
-            }
-
-            stage('Building composer, testerina, connectors, container-support, tool-swagger-ballerina') {
+            stage('Building composer, testerina, container-support, tool-swagger-ballerina') {
                 parallel composerBuild: {
                     if (!composerSkipRelease) {
                         //Following steps are for updating ballerina-parent and ballerina to latest snapshot
                         updateParent(composerRepository, settingsXMLID, parentUpdateCommitMessage, true);
                         updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
-                                "${ballerinaGroudId}:*,${ballerinaConnectorsGroupId}:connectors", true);
+                                "${ballerinaGroudId}:*", true);
                         pushCurrentBranch(composerRepository, gitCredentialsID, user);
                         build(settingsXMLID, composerRepository, YES);
                     }
@@ -506,7 +461,7 @@ node ("${nodeLabel}") {
                     //Following steps are for updating ballerina-parent and ballerina to latest snapshot
                     updateParent(toolsDistributionRepository, settingsXMLID, parentUpdateCommitMessage, true);
                     updateProperties(toolsDistributionRepository, settingsXMLID, propertyUpdateCommitMessage,
-                            "${ballerinaGroudId}:*,${ballerinaConnectorsGroupId}:connectors", true);
+                            "${ballerinaGroudId}:*", true);
                     pushCurrentBranch(toolsDistributionRepository, gitCredentialsID, user);
                 }
             }
