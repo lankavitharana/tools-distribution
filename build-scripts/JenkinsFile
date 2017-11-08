@@ -369,8 +369,15 @@ node ("${nodeLabel}") {
             if (isCleanRelease) {
                 cleanRelease(toolsDistributionRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
             }
-
         }
+
+        stage("Archiving distributions") {
+            // Archive the runtime distribution
+            archiveArtifacts artifacts: 'tools-distribution/modules/ballerina-tools/target/ballerina-tools-*.zip'
+            // Archive the tools distribution
+            archiveArtifacts artifacts: 'tools-distribution/modules/ballerina/target/ballerina-*.zip'
+        }
+
         println("****************************************************************************");
         println("****************************************************************************");
         println("*********************** Release build finished *****************************");
