@@ -1,6 +1,8 @@
 #!groovy
 String BUILD = "Build", RELEASE = "Release", CLEANRELEASE = "Clean Release";
 String YES = "Yes", NO = "No";
+String MASTER = "master";
+
 def expectedAction;
 String yesNoString = "${NO}\n${YES}";
 
@@ -37,6 +39,7 @@ String ballerinaParentVersion, ballerinaParentReleaseTag, ballerinaParentDevVers
 String releaseVersionToClean, releaseTagToClean;
 String allowCleanUpAfterReleaseFailure = NO;
 String nodeLabel;
+String branchName = MASTER;
 String enableFailFast;
 boolean failFast = true;
 
@@ -49,6 +52,8 @@ if (isRelease) {
     releaseParamInput = input(
             id: 'userInput', message: 'Please provide following parameters', parameters: [
             [$class: TEXT_PARAM_DEF_CLASS, description: 'Provide the node label to perform the release', name: 'node-label'],
+
+            [$class: TEXT_PARAM_DEF_CLASS, defaultValue: MASTER, description: 'Provide the branch perform the release', name: 'branch-name'],
 
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Enable fail-fast for parallel builds', name: 'fail-fast'],
 
@@ -83,8 +88,13 @@ if (isRelease) {
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-tools-distrbution-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-tools-distrbution-release']
     ]);
+
     allowCleanUpAfterReleaseFailure = releaseParamInput['clean-up-after-failure'];
+
     nodeLabel = releaseParamInput['node-label'];
+
+    branchName = releaseParamInput['branch-name'];
+
     enableFailFast = releaseParamInput['fail-fast'];
 
     ballerinaParentVersion = releaseParamInput['ballerina-release-version'];
@@ -140,13 +150,14 @@ if (isRelease) {
     toolsDistDevVersion = ballerinaParentDevVersion;
     toolsDistSkipTests = releaseParamInput['skip-tools-distrbution-tests'];
     toolsDistSkipRelease = YES.equals(releaseParamInput['skip-tools-distrbution-release']);
-
 }
 
 if (isBuild) {
     buildParamInput = input(
             id: 'userInput', message: 'Please provide following parameters', parameters: [
             [$class: TEXT_PARAM_DEF_CLASS, description: 'Provide the node label to perform the build', name: 'node-label'],
+
+            [$class: TEXT_PARAM_DEF_CLASS, defaultValue: MASTER, description: 'Provide the branch perform the build', name: 'branch-name'],
 
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Enable fail-fast for parallel builds', name: 'fail-fast'],
 
@@ -161,6 +172,7 @@ if (isBuild) {
     ]);
 
     nodeLabel = buildParamInput['node-label'];
+    branchName = buildParamInput['branch-name'];
     enableFailFast = buildParamInput['fail-fast'];
     ballerinaSkipTests = buildParamInput['skip-ballerina-tests'];
     composerSkipTests = buildParamInput['skip-composer-tests'];
@@ -184,7 +196,6 @@ if (isCleanRelease) {
 
     releaseVersionToClean = cleanReleaseParamInput['ballerina-release-version'];
     releaseTagToClean = "v" + releaseVersionToClean;
-
 }
 
 failFast = YES.equals(enableFailFast);
@@ -210,7 +221,7 @@ node("${nodeLabel}") {
 
     try {
         stage('Building ballerina-parent') {
-            cloneRepository(ballerinaParentRepository, user, gitCredentialsID, gitEmail);
+            cloneRepository(ballerinaParentRepository, branchName, user, gitCredentialsID, gitEmail);
             if (isRelease && !ballerinaParentSkipRelease) {
                 tagMap.add([ballerinaParentRepository, ballerinaParentReleaseTag, ballerinaParentVersion]);
                 release(settingsXMLID, ballerinaParentRepository, ballerinaParentVersion, ballerinaParentReleaseTag, ballerinaParentDevVersion, YES);
@@ -226,7 +237,7 @@ node("${nodeLabel}") {
         }
 
         stage('Building ballerina') {
-            cloneRepository(ballerinaRepository, user, gitCredentialsID, gitEmail);
+            cloneRepository(ballerinaRepository, branchName, user, gitCredentialsID, gitEmail);
             if (isRelease && !ballerinaSkipRelease) {
                 updateParent(ballerinaRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                 tagMap.add([ballerinaRepository, ballerinaReleaseTag, ballerinaVersion]);
@@ -243,7 +254,7 @@ node("${nodeLabel}") {
         }
 
         stage('Building docerina') {
-            cloneRepository(docerinaRepository, user, gitCredentialsID, gitEmail);
+            cloneRepository(docerinaRepository, branchName, user, gitCredentialsID, gitEmail);
             if (isRelease && !docerinaSkipRelease) {
                 updateParent(docerinaRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                 updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
@@ -262,7 +273,7 @@ node("${nodeLabel}") {
         }
 
         stage('Building plugin-maven') {
-            cloneRepository(pluginMavenRepository, user, gitCredentialsID, gitEmail);
+            cloneRepository(pluginMavenRepository, branchName, user, gitCredentialsID, gitEmail);
             if (isRelease && !pluginMavenSkipRelease) {
                 updateParent(pluginMavenRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                 updateProperties(pluginMavenRepository, settingsXMLID, propertyUpdateCommitMessage,
@@ -282,7 +293,7 @@ node("${nodeLabel}") {
 
         stage('Building composer, testerina, container-support, tool-swagger-ballerina') {
             parallel composerBuild: {
-                cloneRepository(composerRepository, user, gitCredentialsID, gitEmail);
+                cloneRepository(composerRepository, branchName, user, gitCredentialsID, gitEmail);
                 if (isRelease && !composerSkipRelease) {
                     updateParent(composerRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                     updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
@@ -299,7 +310,7 @@ node("${nodeLabel}") {
                     cleanRelease(composerRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
                 }
             }, testerinaBuild: {
-                cloneRepository(testerinaRepository, user, gitCredentialsID, gitEmail);
+                cloneRepository(testerinaRepository, branchName, user, gitCredentialsID, gitEmail);
                 if (isRelease && !testerinaSkipRelease) {
                     updateParent(testerinaRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                     updateProperties(testerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
@@ -316,7 +327,7 @@ node("${nodeLabel}") {
                     cleanRelease(testerinaRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
                 }
             }, containerSupportBuild: {
-                cloneRepository(containerSupportRepository, user, gitCredentialsID, gitEmail);
+                cloneRepository(containerSupportRepository, branchName, user, gitCredentialsID, gitEmail);
                 if (isRelease && !containerSupportSkipRelease) {
                     updateParent(containerSupportRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                     updateProperties(containerSupportRepository, settingsXMLID, propertyUpdateCommitMessage,
@@ -333,7 +344,7 @@ node("${nodeLabel}") {
                     cleanRelease(containerSupportRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
                 }
             }, toolSwaggerBallerinaBuild: {
-                cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID, gitEmail);
+                cloneRepository(toolSwaggerBallerinaRepository, branchName, user, gitCredentialsID, gitEmail);
                 if (isRelease && !toolSwaggerSkipRelease) {
                     updateParent(toolSwaggerBallerinaRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                     updateProperties(toolSwaggerBallerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
@@ -353,7 +364,7 @@ node("${nodeLabel}") {
         }
 
         stage('Building tools-distribution') {
-            cloneRepository(toolsDistributionRepository, user, gitCredentialsID, gitEmail);
+            cloneRepository(toolsDistributionRepository, branchName, user, gitCredentialsID, gitEmail);
             if (isRelease && !toolsDistSkipRelease) {
                 updateParent(toolsDistributionRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
                 updateProperties(toolsDistributionRepository, settingsXMLID, propertyUpdateCommitMessage,
@@ -479,7 +490,6 @@ node("${nodeLabel}") {
                 }
             }
         }
-
     } catch (Exception e) {
         println("An exception has occurred in during the build process");
         if (isRelease && YES.equals(allowCleanUpAfterReleaseFailure)) {
@@ -488,7 +498,6 @@ node("${nodeLabel}") {
             }
         }
         throw e;
-
     } finally {
         stage('Clean Up') {
             if (needCleanUp) {
@@ -508,11 +517,12 @@ node("${nodeLabel}") {
  * This method clones a given repository from github.
  *
  * @param repositoryName The repository directory
+ * @param branchName branch which will be used
  * @param user The git user
  * @param credentials GIT credentials ID to be used, in Jenkins credentials
  * @param gitEmail Email of the git user
  */
-def cloneRepository(String repositoryName, String user, String credentials, String gitEmail) {
+def cloneRepository(String repositoryName, String branchName, String user, String credentials, String gitEmail) {
     withCredentials(
             [[$class          : 'UsernamePasswordMultiBinding',
               credentialsId   : credentials,
@@ -521,9 +531,9 @@ def cloneRepository(String repositoryName, String user, String credentials, Stri
 
         checkout([
                 $class                           : 'GitSCM',
-                branches                         : [[name: '*/master']],
+                branches                         : [[name: "*/${branchName}"]],
                 doGenerateSubmoduleConfigurations: false,
-                extensions                       : [[$class: 'LocalBranch', localBranch: 'master'],
+                extensions                       : [[$class: 'LocalBranch', localBranch: "${branchName}"],
                                                     [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName]],
                 submoduleCfg                     : [],
                 userRemoteConfigs                :
