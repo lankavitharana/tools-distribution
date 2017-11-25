@@ -45,7 +45,7 @@ boolean failFast = true;
 
 def releaseParamInput, buildParamInput, cleanReleaseParamInput;
 
-String TEXT_PARAM_DEF_CLASS = "TextParameterDefinition";
+String TEXT_PARAM_DEF_CLASS = "StringParameterDefinition";
 String CHOICE_PARAM_DEF_CLASS = "ChoiceParameterDefinition";
 
 if (isRelease) {
