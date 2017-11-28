@@ -33,6 +33,8 @@ String toolSwaggerVersion, toolSwaggerReleaseTag, toolSwaggerDevVersion, toolSwa
 boolean toolSwaggerSkipRelease = false;
 String pluginMavenVersion, pluginMavenReleaseTag, pluginMavenDevVersion, pluginMavenSkipTests;
 boolean pluginMavenSkipRelease = false;
+String languageServerVersion, languageServerReleaseTag, languageServerDevVersion, languageServerSkipTests;
+boolean languageServerSkipRelease = false;
 String toolsDistVersion, toolsDistReleaseTag, toolsDistDevVersion, toolsDistSkipTests;
 boolean toolsDistSkipRelease = false;
 String ballerinaParentVersion, ballerinaParentReleaseTag, ballerinaParentDevVersion;
@@ -45,7 +47,7 @@ boolean failFast = true;
 
 def releaseParamInput, buildParamInput, cleanReleaseParamInput;
 
-String TEXT_PARAM_DEF_CLASS = "TextParameterDefinition";
+String TEXT_PARAM_DEF_CLASS = "StringParameterDefinition";
 String CHOICE_PARAM_DEF_CLASS = "ChoiceParameterDefinition";
 
 if (isRelease) {
@@ -84,6 +86,9 @@ if (isRelease) {
 
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-plugin-maven-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-plugin-maven-release'],
+
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-language-server-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-language-server-release'],
 
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-tools-distrbution-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-tools-distrbution-release']
@@ -145,6 +150,12 @@ if (isRelease) {
     pluginMavenSkipTests = releaseParamInput['skip-plugin-maven-tests'];
     pluginMavenSkipRelease = YES.equals(releaseParamInput['skip-plugin-maven-release']);
 
+    languageServerVersion = ballerinaParentVersion;
+    languageServerReleaseTag = ballerinaParentReleaseTag;
+    languageServerDevVersion = ballerinaParentDevVersion;
+    languageServerSkipTests = releaseParamInput['skip-language-server-tests'];
+    languageServerSkipRelease = YES.equals(releaseParamInput['skip-language-server-release']);
+
     toolsDistVersion = ballerinaParentVersion;
     toolsDistReleaseTag = ballerinaParentReleaseTag;
     toolsDistDevVersion = ballerinaParentDevVersion;
@@ -168,7 +179,8 @@ if (isBuild) {
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip container-support Tests', name: 'skip-container-support-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip tool-swagger-ballerina Tests', name: 'skip-tool-swagger-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip tools-distribution Tests', name: 'skip-tools-distrbution-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip plugin-maven Tests', name: 'skip-plugin-maven-tests']
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip plugin-maven Tests', name: 'skip-plugin-maven-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip language-server Tests', name: 'skip-language-server-tests']
     ]);
 
     nodeLabel = buildParamInput['node-label'];
@@ -182,6 +194,7 @@ if (isBuild) {
     toolSwaggerSkipTests = buildParamInput['skip-tool-swagger-tests'];
     toolsDistSkipTests = buildParamInput['skip-tools-distrbution-tests'];
     pluginMavenSkipTests = buildParamInput['skip-plugin-maven-tests'];
+    languageServerSkipTests = buildParamInput['skip-language-server-tests'];
 }
 
 if (isCleanRelease) {
@@ -214,6 +227,7 @@ node("${nodeLabel}") {
     String toolsDistributionRepository = "tools-distribution";
     String toolSwaggerBallerinaRepository = "tool-swagger-ballerina";
     String pluginMavenRepository = "plugin-maven";
+    String languageServerRepository = "language-server";
     String ballerinaParentRepository = "ballerina-parent";
     String ballerinaGroudId = "org.ballerinalang";
     String propertyUpdateCommitMessage = "Update versions of org.ballerinalang.* dependencies";
@@ -288,6 +302,23 @@ node("${nodeLabel}") {
 
             if (isCleanRelease) {
                 cleanRelease(pluginMavenRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
+            }
+        }
+
+        stage('Building language-server') {
+            cloneRepository(languageServerRepository, branchName, user, gitCredentialsID, gitEmail);
+            if (isRelease && !languageServerSkipRelease) {
+                updateParent(languageServerRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
+                tagMap.add([languageServerRepository, languageServerReleaseTag, languageServerVersion]);
+                release(settingsXMLID, languageServerRepository, languageServerVersion, languageServerReleaseTag, languageServerDevVersion, languageServerSkipTests);
+            }
+
+            if (isBuild) {
+                build(settingsXMLID, languageServerRepository, languageServerSkipTests);
+            }
+
+            if (isCleanRelease) {
+                cleanRelease(languageServerRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
             }
         }
 
