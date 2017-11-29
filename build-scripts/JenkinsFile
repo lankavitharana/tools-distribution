@@ -42,15 +42,14 @@ String branchName = MASTER;
 String enableFailFast;
 boolean failFast = true;
 
-def releaseParamInput, buildParamInput, cleanReleaseParamInput, parentRD, ballerinaRD, composerRD, docerinaRD, testerinaRD,
-contSupRD, toolSwagRD, plugMvnRD, lanServRD, toolsDistRD;
+def releaseParamInput, buildParamInput, cleanReleaseParamInput;
 
 String TEXT_PARAM_DEF_CLASS = "StringParameterDefinition";
 String CHOICE_PARAM_DEF_CLASS = "ChoiceParameterDefinition";
 
 if (isRelease) {
     releaseParamInput = input(
-            id: 'userInput', message: 'Please provide build Parameters', parameters: [
+            id: 'userInput', message: 'Please provide following parameters', parameters: [
             [$class: TEXT_PARAM_DEF_CLASS, description: 'Provide the node label to perform the release', name: 'node-label'],
 
             [$class: TEXT_PARAM_DEF_CLASS, defaultValue: MASTER, description: 'Provide the branch perform the release', name: 'branch-name'],
@@ -60,66 +59,36 @@ if (isRelease) {
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Delete newly created tags/branches after failure', name: 'clean-up-after-failure'],
 
             [$class: TEXT_PARAM_DEF_CLASS, description: 'Please provide Ballerina Release Version', name: 'ballerina-release-version'],
-            [$class: TEXT_PARAM_DEF_CLASS, description: 'Please provide Ballerina Next Development Version', name: 'ballerina-next-development-version']
-    ]);
+            [$class: TEXT_PARAM_DEF_CLASS, description: 'Please provide Ballerina Next Development Version', name: 'ballerina-next-development-version'],
 
-    parentRD = input(
-            id: 'userInput', message: 'Parameters, ballerina-parent', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-ballerina-parent-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'ballerina-parent', name: 'skip-ballerina-parent-release'],
 
-    ballerinaRD = input(
-            id: 'userInput', message: 'Parameters, ballerina', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-ballerina-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-ballerina-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-ballerina-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'ballerina', name: 'skip-ballerina-release'],
 
-    composerRD = input(
-            id: 'userInput', message: 'Parameters, composer', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-composer-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-composer-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-composer-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'composer', name: 'skip-composer-release'],
 
-    docerinaRD = input(
-            id: 'userInput', message: 'Parameters, docerina', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-docerina-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-docerina-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-docerina-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'docerina', name: 'skip-docerina-release'],
 
-    testerinaRD = input(
-            id: 'userInput', message: 'Parameters, testerina', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-testerina-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-testerina-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-testerina-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'testerina', name: 'skip-testerina-release'],
 
-    contSupRD = input(
-            id: 'userInput', message: 'Parameters, container-support', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-container-support-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-container-support-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-container-support-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'container-support', name: 'skip-container-support-release'],
 
-    toolSwagRD = input(
-            id: 'userInput', message: 'Parameters, tool-swagger', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-tool-swagger-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-tool-swagger-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-tool-swagger-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'tool-swagger', name: 'skip-tool-swagger-release'],
 
-    plugMvnRD = input(
-            id: 'userInput', message: 'Parameters, plugin-maven', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-plugin-maven-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-plugin-maven-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-plugin-maven-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'plugin-maven', name: 'skip-plugin-maven-release'],
 
-    lanServRD = input(
-            id: 'userInput', message: 'Parameters, language-server', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-language-server-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-language-server-release']
-    ]);
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-language-server-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'language-server', name: 'skip-language-server-release'],
 
-    toolsDistRD = input(
-            id: 'userInput', message: 'Parameters, tools-distrbution', parameters: [
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Tests', name: 'skip-tools-distrbution-tests'],
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip Release', name: 'skip-tools-distrbution-release']
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-tools-distrbution-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'tools-distrbution', name: 'skip-tools-distrbution-release']
     ]);
 
     allowCleanUpAfterReleaseFailure = releaseParamInput['clean-up-after-failure'];
@@ -134,61 +103,61 @@ if (isRelease) {
     ballerinaParentReleaseTag = "v" + ballerinaParentVersion;
     ballerinaParentDevVersion = releaseParamInput['ballerina-next-development-version'];
 
-    ballerinaParentSkipRelease = YES.equals(parentRD['skip-ballerina-parent-release']);
+    ballerinaParentSkipRelease = YES.equals(releaseParamInput['skip-ballerina-parent-release']);
 
     ballerinaVersion = ballerinaParentVersion;
     ballerinaReleaseTag = ballerinaParentReleaseTag;
     ballerinaDevVersion = ballerinaParentDevVersion;
-    ballerinaSkipTests = ballerinaRD['skip-ballerina-tests'];
-    ballerinaSkipRelease = YES.equals(ballerinaRD['skip-ballerina-release']);
+    ballerinaSkipTests = releaseParamInput['skip-ballerina-tests'];
+    ballerinaSkipRelease = YES.equals(releaseParamInput['skip-ballerina-release']);
 
     composerVersion = ballerinaParentVersion;
     composerReleaseTag = ballerinaParentReleaseTag;
     composerDevVersion = ballerinaParentDevVersion;
-    composerSkipTests = composerRD['skip-composer-tests'];
-    composerSkipRelease = YES.equals(composerRD['skip-composer-release']);
+    composerSkipTests = releaseParamInput['skip-composer-tests'];
+    composerSkipRelease = YES.equals(releaseParamInput['skip-composer-release']);
 
     docerinaVersion = ballerinaParentVersion;
     docerinaReleaseTag = ballerinaParentReleaseTag;
     docerinaDevVersion = ballerinaParentDevVersion;
-    docerinaSkipTests = docerinaRD['skip-docerina-tests'];
-    docerinaSkipRelease = YES.equals(docerinaRD['skip-docerina-release']);
+    docerinaSkipTests = releaseParamInput['skip-docerina-tests'];
+    docerinaSkipRelease = YES.equals(releaseParamInput['skip-docerina-release']);
 
     testerinaVersion = ballerinaParentVersion;
     testerinaReleaseTag = ballerinaParentReleaseTag;
     testerinaDevVersion = ballerinaParentDevVersion;
-    testerinaSkipTests = testerinaRD['skip-testerina-tests'];
-    testerinaSkipRelease = YES.equals(testerinaRD['skip-testerina-release']);
+    testerinaSkipTests = releaseParamInput['skip-testerina-tests'];
+    testerinaSkipRelease = YES.equals(releaseParamInput['skip-testerina-release']);
 
     containerSupportVersion = ballerinaParentVersion;
     containerSupportReleaseTag = ballerinaParentReleaseTag;
     containerSupportDevVersion = ballerinaParentDevVersion;
-    containerSupportSkipTests = contSupRD['skip-container-support-tests'];
-    containerSupportSkipRelease = YES.equals(contSupRD['skip-container-support-release']);
+    containerSupportSkipTests = releaseParamInput['skip-container-support-tests'];
+    containerSupportSkipRelease = YES.equals(releaseParamInput['skip-container-support-release']);
 
     toolSwaggerVersion = ballerinaParentVersion;
     toolSwaggerReleaseTag = ballerinaParentReleaseTag;
     toolSwaggerDevVersion = ballerinaParentDevVersion;
-    toolSwaggerSkipTests = toolSwagRD['skip-tool-swagger-tests'];
-    toolSwaggerSkipRelease = YES.equals(toolSwagRD['skip-tool-swagger-release']);
+    toolSwaggerSkipTests = releaseParamInput['skip-tool-swagger-tests'];
+    toolSwaggerSkipRelease = YES.equals(releaseParamInput['skip-tool-swagger-release']);
 
     pluginMavenVersion = ballerinaParentVersion;
     pluginMavenReleaseTag = ballerinaParentReleaseTag;
     pluginMavenDevVersion = ballerinaParentDevVersion;
-    pluginMavenSkipTests = plugMvnRD['skip-plugin-maven-tests'];
-    pluginMavenSkipRelease = YES.equals(plugMvnRD['skip-plugin-maven-release']);
+    pluginMavenSkipTests = releaseParamInput['skip-plugin-maven-tests'];
+    pluginMavenSkipRelease = YES.equals(releaseParamInput['skip-plugin-maven-release']);
 
     languageServerVersion = ballerinaParentVersion;
     languageServerReleaseTag = ballerinaParentReleaseTag;
     languageServerDevVersion = ballerinaParentDevVersion;
-    languageServerSkipTests = lanServRD['skip-language-server-tests'];
-    languageServerSkipRelease = YES.equals(lanServRD['skip-language-server-release']);
+    languageServerSkipTests = releaseParamInput['skip-language-server-tests'];
+    languageServerSkipRelease = YES.equals(releaseParamInput['skip-language-server-release']);
 
     toolsDistVersion = ballerinaParentVersion;
     toolsDistReleaseTag = ballerinaParentReleaseTag;
     toolsDistDevVersion = ballerinaParentDevVersion;
-    toolsDistSkipTests = toolsDistRD['skip-tools-distrbution-tests'];
-    toolsDistSkipRelease = YES.equals(toolsDistRD['skip-tools-distrbution-release']);
+    toolsDistSkipTests = releaseParamInput['skip-tools-distrbution-tests'];
+    toolsDistSkipRelease = YES.equals(releaseParamInput['skip-tools-distrbution-release']);
 }
 
 if (isBuild) {
