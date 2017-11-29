@@ -302,7 +302,7 @@ node("${nodeLabel}") {
             }
         }
 
-        stage('Building composer, testerina, container-support, tool-swagger-ballerina', 'language-server') {
+        stage('Building composer, testerina, container-support, tool-swagger-ballerina, language-server') {
             parallel composerBuild: {
                 cloneRepository(composerRepository, branchName, user, gitCredentialsID, gitEmail);
                 if (isRelease && !composerSkipRelease) {
@@ -468,7 +468,7 @@ node("${nodeLabel}") {
                 }
             }
 
-            stage('Building composer, testerina, container-support, tool-swagger-ballerina', 'language-server') {
+            stage('Building composer, testerina, container-support, tool-swagger-ballerina, language-server') {
                 parallel composerBuild: {
                     if (!composerSkipRelease) {
                         //Following steps are for updating ballerina-parent and ballerina to latest snapshot
