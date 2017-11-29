@@ -3,18 +3,17 @@ String BUILD = "Build", RELEASE = "Release", CLEANRELEASE = "Clean Release";
 String YES = "Yes", NO = "No";
 String MASTER = "master";
 
-def expectedAction;
 String yesNoString = "${NO}\n${YES}";
 
 String buildInputParams = "${BUILD}\n${RELEASE}\n${CLEANRELEASE}";
-expectedAction = input(
+def expectedAction = input(
         id: 'userInput', message: 'Please choose Build Or Release option', parameters: [
         [$class: 'ChoiceParameterDefinition', defaultValue: BUILD, choices: buildInputParams, description: 'Build Or Release', name: 'build-or-release']
 ]);
 
-boolean isRelease = RELEASE.equals(expectedAction['build-or-release']);
-boolean isBuild = BUILD.equals(expectedAction['build-or-release']);
-boolean isCleanRelease = CLEANRELEASE.equals(expectedAction['build-or-release']);
+boolean isRelease = RELEASE.equals(expectedAction);
+boolean isBuild = BUILD.equals(expectedAction);
+boolean isCleanRelease = CLEANRELEASE.equals(expectedAction);
 
 boolean ballerinaParentSkipRelease = false;
 String ballerinaVersion, ballerinaReleaseTag, ballerinaDevVersion, ballerinaSkipTests;
