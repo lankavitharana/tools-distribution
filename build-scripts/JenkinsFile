@@ -264,23 +264,42 @@ node("${nodeLabel}") {
             }
         }
 
-        stage('Building docerina') {
-            cloneRepository(docerinaRepository, branchName, user, gitCredentialsID, gitEmail);
-            if (isRelease && !docerinaSkipRelease) {
-                updateParent(docerinaRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
-                updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*", !isRelease);
-                tagMap.add([docerinaRepository, docerinaReleaseTag, docerinaVersion]);
-                release(settingsXMLID, docerinaRepository, docerinaVersion, docerinaReleaseTag, docerinaDevVersion, docerinaSkipTests);
-            }
+        stage('Building language-server, docerina') {
+            parallel languageServerBuild: {
+                cloneRepository(languageServerRepository, branchName, user, gitCredentialsID, gitEmail);
+                if (isRelease && !languageServerSkipRelease) {
+                    updateParent(languageServerRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
+                    updateProperties(languageServerRepository, settingsXMLID, propertyUpdateCommitMessage,
+                            "${ballerinaGroudId}:*", !isRelease);
+                    tagMap.add([languageServerRepository, languageServerReleaseTag, languageServerVersion]);
+                    release(settingsXMLID, languageServerRepository, languageServerVersion, languageServerReleaseTag, languageServerDevVersion, languageServerSkipTests);
+                }
 
-            if (isBuild) {
-                build(settingsXMLID, docerinaRepository, docerinaSkipTests);
-            }
+                if (isBuild) {
+                    build(settingsXMLID, languageServerRepository, languageServerSkipTests);
+                }
 
-            if (isCleanRelease) {
-                cleanRelease(docerinaRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
-            }
+                if (isCleanRelease) {
+                    cleanRelease(languageServerRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID);
+                }
+            }, docerinaBuild: {
+                cloneRepository(docerinaRepository, branchName, user, gitCredentialsID, gitEmail);
+                if (isRelease && !docerinaSkipRelease) {
+                    updateParent(docerinaRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
+                    updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
+                            "${ballerinaGroudId}:*", !isRelease);
+                    tagMap.add([docerinaRepository, docerinaReleaseTag, docerinaVersion]);
+                    release(settingsXMLID, docerinaRepository, docerinaVersion, docerinaReleaseTag, docerinaDevVersion, docerinaSkipTests);
+                }
+
+                if (isBuild) {
+                    build(settingsXMLID, docerinaRepository, docerinaSkipTests);
+                }
+
+                if (isCleanRelease) {
+                    cleanRelease(docerinaRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
+                }
+            }, failFast: failFast
         }
 
         stage('Building plugin-maven') {
@@ -302,25 +321,8 @@ node("${nodeLabel}") {
             }
         }
 
-        stage('Building language-server, composer, testerina, container-support, tool-swagger-ballerina') {
-            parallel languageServerBuild: {
-                cloneRepository(languageServerRepository, branchName, user, gitCredentialsID, gitEmail);
-                if (isRelease && !languageServerSkipRelease) {
-                    updateParent(languageServerRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
-                    updateProperties(languageServerRepository, settingsXMLID, propertyUpdateCommitMessage,
-                            "${ballerinaGroudId}:*", !isRelease);
-                    tagMap.add([languageServerRepository, languageServerReleaseTag, languageServerVersion]);
-                    release(settingsXMLID, languageServerRepository, languageServerVersion, languageServerReleaseTag, languageServerDevVersion, languageServerSkipTests);
-                }
-
-                if (isBuild) {
-                    build(settingsXMLID, languageServerRepository, languageServerSkipTests);
-                }
-
-                if (isCleanRelease) {
-                    cleanRelease(languageServerRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID);
-                }
-            }, composerBuild: {
+        stage('Building composer, testerina, container-support, tool-swagger-ballerina') {
+            parallel composerBuild: {
                 cloneRepository(composerRepository, branchName, user, gitCredentialsID, gitEmail);
                 if (isRelease && !composerSkipRelease) {
                     updateParent(composerRepository, settingsXMLID, parentUpdateCommitMessage, !isRelease);
@@ -446,15 +448,26 @@ node("${nodeLabel}") {
                 }
             }
 
-            stage('Building docerina') {
-                if (!docerinaSkipRelease) {
-                    //Following steps are for updating ballerina-parent and ballerina to latest snapshot
-                    updateParent(docerinaRepository, settingsXMLID, parentUpdateCommitMessage, true);
-                    updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
-                            "${ballerinaGroudId}:*", true);
-                    pushCurrentBranch(docerinaRepository, gitCredentialsID, user);
-                    build(settingsXMLID, docerinaRepository, YES);
-                }
+            stage('Building language-server, docerina') {
+                parallel languageServerBuild: {
+                    if (!languageServerSkipRelease) {
+                        //Following steps are for updating ballerina-parent and ballerina to latest snapshot
+                        updateParent(languageServerRepository, settingsXMLID, parentUpdateCommitMessage, true);
+                        updateProperties(languageServerRepository, settingsXMLID, propertyUpdateCommitMessage,
+                                "${ballerinaGroudId}:*", true);
+                        pushCurrentBranch(languageServerRepository, gitCredentialsID, user);
+                        build(settingsXMLID, languageServerRepository, YES);
+                    }
+                }, docerinaBuild: {
+                    if (!docerinaSkipRelease) {
+                        //Following steps are for updating ballerina-parent and ballerina to latest snapshot
+                        updateParent(docerinaRepository, settingsXMLID, parentUpdateCommitMessage, true);
+                        updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
+                                "${ballerinaGroudId}:*", true);
+                        pushCurrentBranch(docerinaRepository, gitCredentialsID, user);
+                        build(settingsXMLID, docerinaRepository, YES);
+                    }
+                }, failFast: failFast
             }
 
             stage('Building plugin-maven') {
@@ -468,17 +481,8 @@ node("${nodeLabel}") {
                 }
             }
 
-            stage('Building language-server, composer, testerina, container-support, tool-swagger-ballerina') {
-                parallel languageServerBuild: {
-                    if (!languageServerSkipRelease) {
-                        //Following steps are for updating ballerina-parent and ballerina to latest snapshot
-                        updateParent(languageServerRepository, settingsXMLID, parentUpdateCommitMessage, true);
-                        updateProperties(languageServerRepository, settingsXMLID, propertyUpdateCommitMessage,
-                                "${ballerinaGroudId}:*", true);
-                        pushCurrentBranch(languageServerRepository, gitCredentialsID, user);
-                        build(settingsXMLID, languageServerRepository, YES);
-                    }
-                }, composerBuild: {
+            stage('Building composer, testerina, container-support, tool-swagger-ballerina') {
+                parallel composerBuild: {
                     if (!composerSkipRelease) {
                         //Following steps are for updating ballerina-parent and ballerina to latest snapshot
                         updateParent(composerRepository, settingsXMLID, parentUpdateCommitMessage, true);
