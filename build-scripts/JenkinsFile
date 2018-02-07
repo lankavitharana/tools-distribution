@@ -30,7 +30,7 @@ String CHOICE_PARAM_DEF_CLASS = "ChoiceParameterDefinition";
 if (isRelease) {
     releaseParamInput = input(
             id: 'userInput', message: 'Please provide following parameters', parameters: [
-            [$class: TEXT_PARAM_DEF_CLASS, description: 'Provide the node label to perform the release', name: 'node-label'],
+            [$class: TEXT_PARAM_DEF_CLASS, defaultValue: ECS_NODE, description: 'Provide the node label to perform the release', name: 'node-label'],
 
             [$class: TEXT_PARAM_DEF_CLASS, defaultValue: MASTER, description: 'Provide the branch perform the release', name: 'branch-name'],
 
