@@ -49,7 +49,7 @@ if (isRelease) {
     branchName = releaseParamInput['branch-name'];
 
     ballerinaVersion = releaseParamInput['ballerina-release-version'];
-    ballerinaReleaseTag = "v" + ballerinaParentVersion;
+    ballerinaReleaseTag = "v" + ballerinaVersion;
     ballerinaDevVersion = releaseParamInput['ballerina-next-development-version'];
     ballerinaSkipTests = releaseParamInput['skip-ballerina-tests'];
 }
