@@ -218,10 +218,10 @@ def release(String settingsXml, String repositoryDir, String releaseVersion, Str
             withEnv(["JAVA_HOME=${tool env.JDK}", "M2_HOME=${tool env.MAVEN_TOOL}", "PATH+MVN=${tool env.JDK}/bin:${tool env.MAVEN_TOOL}/bin"]) {
                 if ("Yes".equals(skipTests)) {
                     sh 'mvn --version'
-                    sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true" -DreleaseVersion=' + releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
+                    sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-DskipTests=true" -P wso2-release -DreleaseVersion=' + releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
                 } else {
                     sh 'mvn --version'
-                    sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true" -DreleaseVersion=' + releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
+                    sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -P wso2-release -DreleaseVersion=' + releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
                 }
             }
         }
