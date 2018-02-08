@@ -85,7 +85,6 @@ if (isCleanRelease) {
 }
 
 node("${nodeLabel}") {
-    def tagMap = [];
     String user = env.GIT_USER;
     String gitCredentialsID = env.GIT_CREDENTIALS_ID;
     String gitEmail = env.GIT_EMAIL;
@@ -96,7 +95,6 @@ node("${nodeLabel}") {
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, branchName, user, gitCredentialsID, gitEmail);
             if (isRelease) {
-                tagMap.add([ballerinaRepository, ballerinaReleaseTag, ballerinaVersion]);
                 release(settingsXMLID, ballerinaRepository, ballerinaVersion, ballerinaReleaseTag, ballerinaDevVersion, ballerinaSkipTests);
             } else if (isBuild) {
                 build(settingsXMLID, ballerinaRepository, ballerinaSkipTests);
@@ -116,26 +114,10 @@ node("${nodeLabel}") {
                 archiveArtifacts artifacts: 'ballerina/distribution/zip/ballerina-tools/target/ballerina-tools-*.zip'
             }
         }
-
-        println("****************************************************************************");
-        println("****************************************************************************");
-        println("*********************** Release build finished *****************************");
-        println("****************************************************************************");
-        println("****************************************************************************");
-
-        //following steps are to update to latest versions
-        if (isRelease) {
-            stage('Building ballerina') {
-                pushCurrentBranch(ballerinaRepository, gitCredentialsID, user);
-                build(settingsXMLID, ballerinaRepository, YES);
-            }
-        }
     } catch (Exception e) {
         println("An exception has occurred in during the build process");
         if (isRelease && YES.equals(allowCleanUpAfterReleaseFailure)) {
-            for (entry in tagMap) {
-                cleanupRepositoryAfterFailure(entry[0].toString(), user, entry[1].toString(), entry[2].toString(), gitCredentialsID)
-            }
+            cleanupRepositoryAfterFailure(ballerinaRepository, user, ballerinaReleaseTag, ballerinaVersion, gitCredentialsID)
         }
         throw e;
     }
@@ -170,25 +152,6 @@ def cloneRepository(String repositoryName, String branchName, String user, Strin
 
         dir(repositoryName) {
             setupGitUser(credentials, gitEmail);
-        }
-    }
-}
-
-/**
- * This method pushes current branch to the remote repository.
- *
- * @param repositoryName The repository directory
- * @param credentials GIT credentials ID to be used, in Jenkins credentials
- * @param user The git user
- */
-def pushCurrentBranch(String repositoryName, String credentials, String user) {
-    dir(repositoryName) {
-        withCredentials(
-                [[$class          : 'UsernamePasswordMultiBinding',
-                  credentialsId   : credentials,
-                  usernameVariable: 'GIT_USERNAME',
-                  passwordVariable: 'GIT_PASSWORD']]) {
-            sh("git push origin HEAD");
         }
     }
 }
