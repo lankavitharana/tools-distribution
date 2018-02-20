@@ -2,7 +2,7 @@
 String BUILD = "Build", RELEASE = "Release", CLEANRELEASE = "Clean Release";
 String YES = "Yes", NO = "No";
 String MASTER = "master";
-String ECS_NODE = "ECS_COMPONENT_SLAVE_TEST";
+String ECS_NODE = "BALLERINA_ECS";
 
 String yesNoString = "${NO}\n${YES}";
 
