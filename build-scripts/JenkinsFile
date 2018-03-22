@@ -94,6 +94,7 @@ node("${nodeLabel}") {
     try {
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, branchName, user, gitCredentialsID, gitEmail);
+            initSubmodules(ballerinaRepository);
             if (isRelease) {
                 release(settingsXMLID, ballerinaRepository, ballerinaVersion, ballerinaReleaseTag, ballerinaDevVersion, ballerinaSkipTests);
             } else if (isBuild) {
@@ -149,13 +150,7 @@ def cloneRepository(String repositoryName, String branchName, String user, Strin
                 branches                         : [[name: "*/${branchName}"]],
                 doGenerateSubmoduleConfigurations: false,
                 extensions                       : [[$class: 'LocalBranch', localBranch: "${branchName}"],
-                                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName],
-                                                    [$class             : 'SubmoduleOption',
-                                                     disableSubmodules  : false,
-                                                     parentCredentials  : false,
-                                                     recursiveSubmodules: true,
-                                                     reference          : '',
-                                                     trackingSubmodules : false]],
+                                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName]],
                 submoduleCfg                     : [],
                 userRemoteConfigs                :
                         [[credentialsId: credentials,
@@ -164,6 +159,19 @@ def cloneRepository(String repositoryName, String branchName, String user, Strin
         dir(repositoryName) {
             setupGitUser(credentials, gitEmail);
         }
+    }
+}
+
+/**
+ * This method initializes submodules.
+ *
+ * @param repositoryDir The repository directory
+ */
+def initSubmodules(String repositoryDir) {
+    dir(repositoryDir) {
+        println("Initializing and updating submodules");
+        sh("git submodule init");
+        sh("git submodule update");
     }
 }
 
