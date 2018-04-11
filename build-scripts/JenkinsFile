@@ -17,8 +17,6 @@ boolean isBuild = BUILD.equals(expectedAction);
 boolean isCleanRelease = CLEANRELEASE.equals(expectedAction);
 
 String ballerinaVersion, ballerinaReleaseTag, ballerinaDevVersion, ballerinaSkipTests;
-String examplesVersion, examplesReleaseTag, examplesDevVersion, examplesSkipTests;
-
 String releaseVersionToClean, releaseTagToClean;
 String allowCleanUpAfterReleaseFailure = NO;
 String nodeLabel = ECS_NODE;
@@ -54,11 +52,6 @@ if (isRelease) {
     ballerinaReleaseTag = "v" + ballerinaVersion;
     ballerinaDevVersion = releaseParamInput['ballerina-next-development-version'];
     ballerinaSkipTests = releaseParamInput['skip-ballerina-tests'];
-
-    examplesVersion = ballerinaVersion;
-    examplesReleaseTag = ballerinaReleaseTag;
-    examplesDevVersion = ballerinaDevVersion;
-    examplesSkipTests = releaseParamInput['skip-ballerina-examples-tests'];
 }
 
 if (isBuild) {
@@ -97,7 +90,6 @@ node("${nodeLabel}") {
     String gitEmail = env.GIT_EMAIL;
     String settingsXMLID = env.SETTINGS_XML_ID;
     String ballerinaRepository = "ballerina-lang";
-    String exampleRepository = "ballerina-examples";
 
     try {
         stage('Building ballerina') {
