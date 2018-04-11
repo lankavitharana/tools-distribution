@@ -111,17 +111,6 @@ node("${nodeLabel}") {
             }
         }
 
-        stage('Building examples') {
-            cloneRepository(exampleRepository, branchName, user, gitCredentialsID, gitEmail);
-            if (isRelease) {
-                release(settingsXMLID, exampleRepository, exampleVersion, exampleReleaseTag, exampleDevVersion, exampleSkipTests);
-            } else if (isBuild) {
-                build(settingsXMLID, exampleRepository, exampleSkipTests);
-            } else if (isCleanRelease) {
-                cleanRelease(exampleRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
-            }
-        }
-
         if (isBuild || isRelease) {
             // Archive the runtime distribution
             stage("Archiving Runtime distribution") {
