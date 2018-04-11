@@ -58,6 +58,7 @@ if (isRelease) {
     examplesVersion = ballerinaVersion;
     examplesReleaseTag = ballerinaReleaseTag;
     examplesDevVersion = ballerinaDevVersion;
+    examplesSkipTests = releaseParamInput['skip-ballerina-examples-tests'];
 }
 
 if (isBuild) {
@@ -95,8 +96,8 @@ node("${nodeLabel}") {
     String gitCredentialsID = env.GIT_CREDENTIALS_ID;
     String gitEmail = env.GIT_EMAIL;
     String settingsXMLID = env.SETTINGS_XML_ID;
-    String ballerinaRepository = "ballerina";
-    String exampleRepository = "examples";
+    String ballerinaRepository = "ballerina-lang";
+    String exampleRepository = "ballerina-examples";
 
     try {
         stage('Building ballerina') {
@@ -115,7 +116,7 @@ node("${nodeLabel}") {
             if (isRelease) {
                 release(settingsXMLID, exampleRepository, exampleVersion, exampleReleaseTag, exampleDevVersion, exampleSkipTests);
             } else if (isBuild) {
-                build(settingsXMLID, exampleRepository, ballerinaSkipTests);
+                build(settingsXMLID, exampleRepository, exampleSkipTests);
             } else if (isCleanRelease) {
                 cleanRelease(exampleRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
             }
