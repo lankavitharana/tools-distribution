@@ -17,6 +17,9 @@ boolean isBuild = BUILD.equals(expectedAction);
 boolean isCleanRelease = CLEANRELEASE.equals(expectedAction);
 
 String ballerinaVersion, ballerinaReleaseTag, ballerinaDevVersion, ballerinaSkipTests;
+String exampleVersion, exampleReleaseTag, exampleDevVersion, exampleSkipTests;
+String distributionVersion, distributionReleaseTag, distributionDevVersion, distributionSkipTests;
+
 String releaseVersionToClean, releaseTagToClean;
 String allowCleanUpAfterReleaseFailure = NO;
 String nodeLabel = ECS_NODE;
@@ -40,6 +43,8 @@ if (isRelease) {
             [$class: TEXT_PARAM_DEF_CLASS, description: 'Please provide Ballerina Next Development Version', name: 'ballerina-next-development-version'],
 
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-ballerina-tests']
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-example-tests']
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-distribution-tests']
     ]);
 
     allowCleanUpAfterReleaseFailure = releaseParamInput['clean-up-after-failure'];
@@ -52,6 +57,16 @@ if (isRelease) {
     ballerinaReleaseTag = "v" + ballerinaVersion;
     ballerinaDevVersion = releaseParamInput['ballerina-next-development-version'];
     ballerinaSkipTests = releaseParamInput['skip-ballerina-tests'];
+
+    exampleVersion = ballerinaVersion;
+    exampleReleaseTag = ballerinaReleaseTag;
+    exampleDevVersion = ballerinaDevVersion;
+    exampleSkipTests = releaseParamInput['skip-example-tests'];
+
+    distributionVersion = ballerinaVersion;
+    distributionReleaseTag = ballerinaReleaseTag;
+    distributionDevVersion = ballerinaDevVersion;
+    distributionSkipTests = releaseParamInput['skip-distribution-tests'];
 }
 
 if (isBuild) {
@@ -62,12 +77,16 @@ if (isBuild) {
             [$class: TEXT_PARAM_DEF_CLASS, defaultValue: MASTER, description: 'Provide the branch perform the build', name: 'branch-name'],
 
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip ballerina Tests', name: 'skip-ballerina-tests']
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-example-tests']
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-distribution-tests']
     ]);
 
     nodeLabel = buildParamInput['node-label'];
     branchName = buildParamInput['branch-name'];
     enableFailFast = buildParamInput['fail-fast'];
     ballerinaSkipTests = buildParamInput['skip-ballerina-tests'];
+    exampleSkipTests = releaseParamInput['skip-example-tests'];
+    distributionSkipTests = releaseParamInput['skip-distribution-tests'];
 }
 
 if (isCleanRelease) {
@@ -90,6 +109,8 @@ node("${nodeLabel}") {
     String gitEmail = env.GIT_EMAIL;
     String settingsXMLID = env.SETTINGS_XML_ID;
     String ballerinaRepository = "ballerina-lang";
+    String exampleRepository = "ballerina-examples";
+    String distributionRepository = "ballerina-distribution";
 
     try {
         stage('Building ballerina') {
@@ -103,6 +124,28 @@ node("${nodeLabel}") {
             }
         }
 
+        stage('Building examples') {
+            cloneRepository(exampleRepository, branchName, user, gitCredentialsID, gitEmail);
+            if (isRelease) {
+                release(settingsXMLID, exampleRepository, exampleVersion, exampleReleaseTag, exampleDevVersion, exampleSkipTests);
+            } else if (isBuild) {
+                build(settingsXMLID, exampleRepository, exampleSkipTests);
+            } else if (isCleanRelease) {
+                cleanRelease(exampleRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
+            }
+        }
+
+        stage('Building distribution') {
+            cloneRepository(distributionRepository, branchName, user, gitCredentialsID, gitEmail);
+            if (isRelease) {
+                release(settingsXMLID, distributionRepository, distributionVersion, distributionReleaseTag, distributionDevVersion, distributionSkipTests);
+            } else if (isBuild) {
+                build(settingsXMLID, distributionRepository, distributionSkipTests);
+            } else if (isCleanRelease) {
+                cleanRelease(distributionRepository, user, releaseTagToClean, releaseVersionToClean, gitCredentialsID)
+            }
+        }
+
         if (isBuild || isRelease) {
             // Archive the runtime distribution
             stage("Archiving Runtime distribution") {
@@ -112,6 +155,11 @@ node("${nodeLabel}") {
             // Archive the tools distribution
             stage("Archiving Tools distribution") {
                 archiveArtifacts artifacts: 'ballerina-distribution/ballerina-platform/target/ballerina-*.zip'
+            }
+
+            // Archive the Examples
+            stage("Archiving Examples") {
+                archiveArtifacts artifacts: 'ballerina-examples/target/ballerina-*.zip'
             }
 
             // Archive the vscode distribution
