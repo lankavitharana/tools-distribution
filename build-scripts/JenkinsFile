@@ -79,8 +79,8 @@ if (isBuild) {
     branchName = buildParamInput['branch-name'];
     enableFailFast = buildParamInput['fail-fast'];
     ballerinaSkipTests = buildParamInput['skip-ballerina-tests'];
-    exampleSkipTests = releaseParamInput['skip-example-tests'];
-    distributionSkipTests = releaseParamInput['skip-distribution-tests'];
+    exampleSkipTests = buildParamInput['skip-example-tests'];
+    distributionSkipTests = buildParamInput['skip-distribution-tests'];
 }
 
 if (isCleanRelease) {
