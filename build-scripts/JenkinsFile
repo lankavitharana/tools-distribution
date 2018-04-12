@@ -34,16 +34,12 @@ if (isRelease) {
     releaseParamInput = input(
             id: 'userInput', message: 'Please provide following parameters', parameters: [
             [$class: TEXT_PARAM_DEF_CLASS, defaultValue: ECS_NODE, description: 'Provide the node label to perform the release', name: 'node-label'],
-
             [$class: TEXT_PARAM_DEF_CLASS, defaultValue: MASTER, description: 'Provide the branch perform the release', name: 'branch-name'],
-
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Delete newly created tags/branches after failure', name: 'clean-up-after-failure'],
-
             [$class: TEXT_PARAM_DEF_CLASS, description: 'Please provide Ballerina Release Version', name: 'ballerina-release-version'],
             [$class: TEXT_PARAM_DEF_CLASS, description: 'Please provide Ballerina Next Development Version', name: 'ballerina-next-development-version'],
-
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-ballerina-tests']
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-example-tests']
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-ballerina-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-example-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-distribution-tests']
     ]);
 
@@ -73,11 +69,9 @@ if (isBuild) {
     buildParamInput = input(
             id: 'userInput', message: 'Please provide following parameters', parameters: [
             [$class: TEXT_PARAM_DEF_CLASS, defaultValue: ECS_NODE, description: 'Provide the node label to perform the build', name: 'node-label'],
-
             [$class: TEXT_PARAM_DEF_CLASS, defaultValue: MASTER, description: 'Provide the branch perform the build', name: 'branch-name'],
-
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip ballerina Tests', name: 'skip-ballerina-tests']
-            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-example-tests']
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, description: 'Skip ballerina Tests', name: 'skip-ballerina-tests'],
+            [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-example-tests'],
             [$class: CHOICE_PARAM_DEF_CLASS, choices: yesNoString, name: 'skip-distribution-tests']
     ]);
 
@@ -93,7 +87,6 @@ if (isCleanRelease) {
     cleanReleaseParamInput = input(
             id: 'userInput', message: 'Please provide following parameters', parameters: [
             [$class: TEXT_PARAM_DEF_CLASS, defaultValue: ECS_NODE, description: 'Provide the node label to perform the release', name: 'node-label'],
-
             [$class: TEXT_PARAM_DEF_CLASS, description: 'Please provide Release Version to clean', name: 'ballerina-release-version']
     ]);
 
